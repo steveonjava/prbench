@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { loadCase } from '../src/schema/case.ts';
 import { claudeProjectDir, createSandbox, msysPath, pathPairs, rewritePaths } from '../src/run/sandbox.ts';
 import { exec, git } from '../src/util/exec.ts';
-import { cleanupTemps, EXAMPLE, tempDir } from './helpers.ts';
+import { cleanupTemps, copyExample, EXAMPLE, tempDir } from './helpers.ts';
 
 afterAll(cleanupTemps);
 
@@ -36,6 +36,23 @@ describe('rewritePaths', () => {
       cwd: to,
       file: `${to}\\a.ts`,
       alt: 'D:/tmp/sb/repo/b.ts',
+    });
+  });
+
+  test('gives a Windows path replayed on a POSIX host POSIX separators throughout', () => {
+    const from = 'C:\\prbench-replay\\tracetoon';
+    const line = JSON.stringify({
+      cwd: from,
+      file: `${from}\\src\\digest\\build.ts`,
+      plan: 'C:\\prbench-replay\\home\\.claude\\plans\\kite.md',
+      cmd: `cd ${from}\\src && type C:\\other\\x.txt`,
+    });
+    expect(JSON.parse(rewritePaths(line, [[from, '/sb/work/tracetoon'], ['C:\\prbench-replay', '/sb/work']]))).toEqual({
+      cwd: '/sb/work/tracetoon',
+      file: '/sb/work/tracetoon/src/digest/build.ts',
+      plan: '/sb/work/home/.claude/plans/kite.md',
+      // Only the mapped path changes; unrelated host paths keep their spelling.
+      cmd: 'cd /sb/work/tracetoon/src && type C:\\other\\x.txt',
     });
   });
 
@@ -212,6 +229,15 @@ describe('createSandbox', () => {
       expect(second.stdout.trim()).toEndWith('/pull/2');
       expect(sb.capturedPRs()[1]).toMatchObject({ number: 2, title: 'Again', body: 'inline', draft: false });
 
+      // Help never opens a PR (seen from a Codex writer: `gh pr create --help`).
+      for (const help of [['pr', 'create', '--help'], ['pr', 'view', '-h'], ['help', 'pr']]) {
+        const h = gh(help, sb.env, sb.repo);
+        expect(h.code).toBe(0);
+        expect(h.stdout).not.toContain('/pull/');
+      }
+      expect(sb.capturedPRs()).toHaveLength(2);
+      expect(gh(['pr', 'create', '--title', 'Third'], sb.env, sb.repo).stdout.trim()).toEndWith('/pull/3');
+
       const odd = gh(['release', 'create', 'v1'], sb.env, sb.repo);
       expect(odd.code).toBe(1);
       expect(odd.stderr).toContain('unsupported command');
@@ -231,4 +257,19 @@ describe('createSandbox', () => {
     expect(() => createSandbox(broken, { parent })).toThrow(/git checkout/);
     expect(readdirSync(parent)).toEqual([]);
   });
+});
+
+test('a Windows recorded path names the checkout by its last segment on any host', () => {
+  // Public cases recorded on Windows (C:\prbench-replay\tracetoon) are replayed
+  // on Linux; the checkout must not become one directory named "C:\...".
+  const cases = copyExample('windows-recorded', (c) => {
+    c.repo.recordedPath = 'C:\\prbench-replay\\greet';
+  });
+  const sb = createSandbox(loadCase(cases.dir), { parent: tempDir() });
+  try {
+    expect(sb.repo).toBe(join(sb.root, 'work', 'greet'));
+    expect(readdirSync(join(sb.root, 'work'))).toEqual(['greet']);
+  } finally {
+    sb.dispose();
+  }
 });
