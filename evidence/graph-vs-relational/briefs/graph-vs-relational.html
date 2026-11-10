@@ -1,0 +1,512 @@
+<title>Graph vs Relational Evidence</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column (~70ch) with wide figure bands; a sticky section index on wide screens. */
+:root{
+  --bg:#f6f7f5; --surface:#ffffff; --fg:#17201d; --muted:#5b6762; --rule:#d9dfdb;
+  --graph:#0e7c66; --graph-soft:#d6efe8; --main:#8a6d3b; --main-soft:#f0e6d3;
+  --cheap:#4f7fbf; --cheap-soft:#dce6f4; --warn:#b4472d; --warn-soft:#f6ddd5; --over:#9a6a00; --over-soft:#f7ebc7;
+  --add-soft:#d6efe8; --miss-soft:#e9ecea; --note:#eef2f0; --code:#eef1ee;
+  --display:"Bricolage Grotesque", "IBM Plex Sans", system-ui, sans-serif;
+  --body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#111715; --surface:#18201d; --fg:#e4ebe7; --muted:#9aa8a1; --rule:#2c3833;
+  --graph:#3fc4a6; --graph-soft:#163a32; --main:#d2ad6e; --main-soft:#3a2f1c;
+  --cheap:#7fa9e3; --cheap-soft:#1c2a3d; --warn:#ef8a6d; --warn-soft:#46231a; --over:#e6be5a; --over-soft:#3d3115;
+  --add-soft:#163a32; --miss-soft:#252e2a; --note:#1c2622; --code:#1d2622; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#111715; --surface:#18201d; --fg:#e4ebe7; --muted:#9aa8a1; --rule:#2c3833;
+  --graph:#3fc4a6; --graph-soft:#163a32; --main:#d2ad6e; --main-soft:#3a2f1c;
+  --cheap:#7fa9e3; --cheap-soft:#1c2a3d; --warn:#ef8a6d; --warn-soft:#46231a; --over:#e6be5a; --over-soft:#3d3115;
+  --add-soft:#163a32; --miss-soft:#252e2a; --note:#1c2622; --code:#1d2622; color-scheme:dark }
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.6;margin:0}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 80px;display:grid;grid-template-columns:190px minmax(0,1fr);gap:44px}
+@media (max-width:900px){.wrap{grid-template-columns:minmax(0,1fr);gap:0}.toc{display:none}}
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;font-size:13px;line-height:1.5}
+.toc a{display:block;color:var(--muted);text-decoration:none;padding:3px 0}
+.toc a:hover,.toc a:focus-visible{color:var(--graph)}
+.toc .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+main{min-width:0}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:clamp(32px,5vw,50px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:clamp(25px,3.2vw,32px);font-weight:700;margin-top:72px;padding-top:24px;border-top:1px solid var(--rule)}
+h3{font-size:20px;font-weight:600;margin-top:32px}
+p,li{max-width:72ch}
+.kicker{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--graph);margin-bottom:12px}
+.lede{font-size:19px;color:var(--muted);margin-top:16px}
+.meta{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:18px}
+a{color:var(--graph)}
+code,.mono{font-family:var(--mono);font-size:.88em;background:var(--code);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:32px}
+.tile{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+.tile .big{font-family:var(--display);font-size:36px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;color:var(--graph)}
+.tile .big.even{color:var(--main)}
+.tile .sub{font-size:13px;color:var(--muted)}
+.tile .prov{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+figure{margin:28px 0 0;background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:20px 20px 14px}
+figcaption{font-size:13px;color:var(--muted);margin-top:10px;max-width:none}
+.fig-title{font-weight:600;font-size:15px;margin-bottom:6px}
+.chart{width:100%;overflow-x:auto}
+.chart svg{display:block;max-width:100%;height:auto}
+@media (max-width:640px){.chart svg{max-width:none;width:640px}}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--muted);margin-top:6px}
+.legend span::before{content:"";display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;vertical-align:-1px;background:var(--c)}
+.tbl{overflow-x:auto;margin-top:20px}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+td.n,th.n{text-align:right;white-space:nowrap}
+td.better{color:var(--graph);font-weight:600}
+td.worse{color:var(--warn);font-weight:600}
+td.even{color:var(--main);font-weight:600}
+.callout{margin-top:24px;background:var(--note);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;padding:14px 18px}
+.callout.g{border-left-color:var(--graph)}
+.callout p{margin:6px 0;font-size:15px}
+.statement{margin-top:28px;font-family:var(--display);font-size:clamp(21px,2.6vw,27px);font-weight:700;line-height:1.25;border-left:4px solid var(--graph);padding:6px 0 6px 18px;max-width:40ch}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-top:20px}
+@media (max-width:420px){.two{grid-template-columns:minmax(0,1fr)}}
+.two>div{min-width:0}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px 20px}
+.card h4{margin:0 0 8px;font-family:var(--display);font-size:17px}
+.card.g{border-top:3px solid var(--graph)}
+.card.m{border-top:3px solid var(--main)}
+.card.s{border-top:3px solid var(--cheap)}
+.card.n{border-top:3px solid var(--muted)}
+.card ol,.card ul{padding-left:20px;margin:6px 0}
+.card li{margin:4px 0;font-size:15px}
+pre.cypher{background:var(--code);border:1px solid var(--rule);border-radius:10px;padding:14px 16px;overflow-x:auto;margin-top:14px;font-family:var(--mono);font-size:13px;line-height:1.55;white-space:pre}
+.fb{counter-reset:fb;list-style:none;padding:0;margin:20px 0 0}
+.fb>li{counter-increment:fb;max-width:none;background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px 20px 14px 64px;margin-top:14px;position:relative}
+.fb>li::before{content:counter(fb);position:absolute;left:18px;top:14px;font-family:var(--display);font-weight:700;font-size:26px;color:var(--graph);line-height:1}
+.fb h4{margin:0;font-family:var(--display);font-size:18px}
+.fb p{margin:8px 0 0;font-size:15px}
+.fb .where{font-size:13px;color:var(--muted)}
+.pri{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:999px;margin-left:8px;vertical-align:2px;white-space:nowrap}
+.pri.p1{background:var(--warn-soft);color:var(--warn)}
+.pri.p2{background:var(--over-soft);color:var(--over)}
+.pri.p3{background:var(--note);color:var(--muted)}
+svg text{fill:var(--fg);font-family:var(--body)}
+svg .axis{stroke:var(--rule)}
+svg .muted{fill:var(--muted)}
+svg .mono{font-family:var(--mono)}
+:focus-visible{outline:2px solid var(--graph);outline-offset:2px}
+</style>
+
+<div class="wrap">
+<nav class="toc" aria-label="Sections">
+  <div class="lbl">Contents</div>
+  <a href="#verdict">The verdict</a>
+  <a href="#arms">The two arms</a>
+  <a href="#road">The road</a>
+  <a href="#honest">Where relational won</a>
+  <a href="#engine">Same queries, SQLite</a>
+  <a href="#relate">Relate vs cypherlite</a>
+  <a href="#feedback">Feedback for Relate</a>
+  <a href="#method">Method and caveats</a>
+</nav>
+
+<main>
+<header id="verdict">
+  <div class="kicker">Tracetoon · graph vs relational evidence · November 2026</div>
+  <h1>The graph brief wins on quality, narrowly, and the engine loses to SQLite</h1>
+  <p class="lede">We built two evidence stores for Tracetoon's PR writer and gave them the same writer, reviewers, base drafts, judges and harness. The graph brief on Relate beats a relational store on quality at a similar budget. The margin is clear on Claude and thin on Codex. Separately, a straight SQLite port of the same graph queries produced byte-identical briefs about three times faster.</p>
+  <div class="meta">Shipping graph build r23 (tracetoon bd55f75) vs relational arm r17 (tracetoon 9f05d15) · prbench real-cases@1.0.0 dev split, 5 PRs × 5 replicates per arm</div>
+
+  <div class="tiles">
+    <div class="tile"><div class="prov">Claude · Sonnet writer</div><div class="big">12–1</div><div class="sub">Paired outcomes, graph better vs relational better (12 equal)</div></div>
+    <div class="tile"><div class="prov">Claude · Sonnet writer</div><div class="big">+7.3</div><div class="sub">Composite Δ-of-Δ, 95% CI +1.7 to +13.8. Errors 0.08 vs 0.14 per judgment</div></div>
+    <div class="tile"><div class="prov">Claude · Sonnet writer</div><div class="big even">$0.407</div><div class="sub">Cost per draft, relational $0.412. Same budget</div></div>
+    <div class="tile"><div class="prov">Codex · Terra writer</div><div class="big even">4–5</div><div class="sub">Paired outcomes, graph better vs relational better (16 equal), both runs</div></div>
+    <div class="tile"><div class="prov">Codex · Terra writer</div><div class="big">+0.7 / +2.4</div><div class="sub">Composite Δ-of-Δ on two runs. CI clear of zero on the second only. Errors 0.00 vs 0.00</div></div>
+    <div class="tile"><div class="prov">Codex · Terra writer</div><div class="big even">+17–22%</div><div class="sub">Cost per draft, $0.198–0.207 vs $0.169</div></div>
+  </div>
+
+  <div class="callout g">
+    <p><b>Verdict.</b> On Claude, the graph brief wins on quality at the same cost. It wins 12 paired outcomes and loses 1, the composite gap is clear of zero, and it makes fewer factual errors.</p>
+    <p>On Codex, the graph brief wins narrowly on composite score, with the interval clear of zero on one of two runs. The two arms are level on errors. Relational still wins one more paired consensus outcome than the graph in both runs, and the graph costs 17–22% more per draft. That is a tie on outcomes and a small loss on cost.</p>
+  </div>
+  <p class="statement">A graph-specialized database should never lose to a relational database on a graph-shaped workload.</p>
+  <p>Today it does. The rest of this page shows how close the quality race was, what the relational arm did better, how a SQLite port of the same queries compares on speed, and what we would ask the Relate team to fix first.</p>
+</header>
+
+<section>
+<h2 id="arms">The two arms</h2>
+<p>Both arms read the same agent session logs, the same diff and the same redacted evidence. They differ in how the evidence is stored and how the brief the writer reads is built.</p>
+<div class="two">
+  <div class="card g">
+    <h4>Graph brief on Relate (r23)</h4>
+    <ul>
+      <li>Evidence graph of prompts, plans, edits, hunks, commits, runs and claims, built deterministically in Relate (WASM).</li>
+      <li>The brief is rendered from named Cypher queries: sentence-to-code links, new vs changed, do-not-say and limits rows, owners rows, run history, provenance from prompts and plans to surviving edits.</li>
+      <li>Search links: Relate's own FULLTEXT index (BM25) ties commit text, prompts and plans to hunks, stored as <code>TIED_TO</code> edges.</li>
+      <li>Tracetoon closeout commit <code>bd55f75</code>. Default reviewers: two cheap high-effort review passes.</li>
+    </ul>
+  </div>
+  <div class="card m">
+    <h4>Relational store (r17)</h4>
+    <ul>
+      <li>SQLite tables for the same evidence, with FTS5 BM25 full-text search and local embeddings (potion-code-16M).</li>
+      <li>The brief is a packed context of about 2,112 tokens, built by text retrieval over those tables.</li>
+      <li>Same reviewers and defaults, same base drafts, judges and harness.</li>
+      <li>Tracetoon branch <code>r17-relational</code>, commit <code>9f05d15</code>.</li>
+    </ul>
+  </div>
+</div>
+<h3>Final scores</h3>
+<div class="tbl"><table>
+  <thead><tr><th>Metric</th><th class="n">Claude graph</th><th class="n">Claude relational</th><th class="n">Codex graph (run 1 / 2)</th><th class="n">Codex relational</th></tr></thead>
+  <tbody id="t-final"></tbody>
+</table></div>
+<p>Each arm is scored against its own base draft from Tracetoon's original multi-agent workflow, so the comparison that matters is the difference of differences. On Claude the relational arm scored below its own base (73.0 vs 75.0), mostly through uncertainties (0.52) and traps (0.10 per judgment). The graph arm scored 5.2 above its base. On Codex both arms improved on their base, by 2.8 for relational and by 3.4 and 5.2 for the two graph runs.</p>
+</section>
+
+<section>
+<h2 id="road">The road: five rounds to pass relational</h2>
+<p>The relational arm was frozen at r17. We kept improving the graph brief and compared each round against it. The first comparison, r15, came before the relational arm existed and was scored against it afterwards.</p>
+
+<figure>
+  <div class="fig-title">Paired outcomes per round against the r17 relational arm</div>
+  <div class="chart" id="c-outcomes"></div>
+  <div class="legend"><span style="--c:var(--graph)">Graph better</span><span style="--c:var(--main)">Relational better</span><span style="--c:var(--rule)">Equal (count at right)</span></div>
+  <figcaption>25 pairs per provider per round, one per (case, replicate). A pair counts as better for one arm when every judgment prefers that arm's improvement over its own base. The Claude r20 run uses regenerated base drafts after a Claude Code update (CLI pinned at 2.1.319). "r18 +vec" added vector search to BM25 on Codex only. "r23 rerun" is a second Codex run of the shipping build.</figcaption>
+</figure>
+
+<figure>
+  <div class="fig-title">Composite Δ-of-Δ per round, with 95% case-bootstrap intervals</div>
+  <div class="chart" id="c-delta"></div>
+  <div class="legend"><span style="--c:var(--graph)">Interval clear of zero</span><span style="--c:var(--muted)">Interval includes zero</span></div>
+  <figcaption>Δ-of-Δ = (graph − its base) − (relational − its base), in composite points. The two panels use different scales. Intervals are a bootstrap over the 5 cases (5000 resamples, seed 7), so they are wide.</figcaption>
+</figure>
+
+<div class="tbl"><table>
+  <thead><tr><th>Round</th><th>Tracetoon commit</th><th>What changed</th><th class="n">Claude B/W/E</th><th class="n">Claude Δ-of-Δ</th><th class="n">Codex B/W/E</th><th class="n">Codex Δ-of-Δ</th></tr></thead>
+  <tbody id="t-road"></tbody>
+</table></div>
+<p>B/W/E counts graph better / relational better / equal. The intervals here were recomputed for this page with the current paired-delta tool and differ from earlier notes by up to 0.5 points on a few rounds.</p>
+</section>
+
+<section>
+<h2 id="honest">Where relational won, and where the graph did</h2>
+<div class="callout">
+  <p><b>Relational beat the r15 graph on Codex outright.</b> It won 13 pairs and lost 1 against its own base with 0.00 factual errors. The r15 graph had 0.09 errors per judgment and lost 7 of 25 paired outcomes to relational, winning 1.</p>
+  <p><b>It took five rounds of brief engineering to pass it.</b> On Codex, r21 was the first round whose interval did not dip below zero (lower bound 0.0), and r22 was the first clearly above it. The graph still trails on paired outcomes in the final two Codex runs, 4 to 5. In the first of those, relational won 4 of 5 pairs on pr11.</p>
+  <p><b>Several of the graph's winning features came from the relational arm.</b> Text search that ties docs and script sentences to hunks, and code lines printed next to claims, were relational ideas we moved into the graph.</p>
+  <p><b>The margins are small.</b> 25 pairs per provider is a small sample, and the case bootstrap has only 5 cases to resample.</p>
+  <p><b>Vector search added nothing.</b> On Codex, BM25 plus vectors scored 3/8/14 and −0.8 against relational, worse than BM25 alone (1/7/17, +0.1).</p>
+  <p><b>The graph brief got bigger.</b> Graph briefs grew 6–15% over the rounds. On Codex the larger brief is re-read on every turn, which is where the 17–22% cost gap comes from. Codex graph runs used 2.16–2.20M writer input tokens vs 1.76M for relational.</p>
+</div>
+<p>The relational arm has its own weaknesses. On pr12 it mislabeled a symbol, which walked the writer into trap T4 in 8 of 20 judgments. Its packed context has no do-not-say, process or background rows, so it has nothing to stop the writer from repeating a claim the session abandoned. Its uncertainties score on Claude was 0.52, against 0.60 for the graph.</p>
+<div class="two">
+  <div class="card g">
+    <h4>Where graph structure won</h4>
+    <ul>
+      <li>Sentence-to-code links that survive later edits.</li>
+      <li>New vs changed, from edit lineage.</li>
+      <li>Do-not-say and limits rows for claims the session dropped or never checked.</li>
+      <li>Provenance from prompts and plans to the edits that survived. This is where context scores came from.</li>
+      <li>Owners rows that say where each behavior lives.</li>
+      <li>Run history tied to the final code.</li>
+    </ul>
+  </div>
+  <div class="card m">
+    <h4>Where relational text retrieval won early</h4>
+    <ul>
+      <li>Tying sentences in docs and scripts to the hunks they describe.</li>
+      <li>Showing the code lines and comments next to the claim.</li>
+      <li>Entry points at the owning file.</li>
+    </ul>
+  </div>
+</div>
+<p>The shipping design is graph structure plus full-text search inside the graph database, using Relate's own BM25 index. That combination is what passed the relational arm.</p>
+</section>
+
+<section>
+<h2 id="engine">The same graph queries on SQLite</h2>
+<p>Another agent ported Tracetoon's graph queries to SQLite (tracetoon branches <code>feat/evidence-sqlite</code> at <code>1e11af2</code> and <code>feat/evidence-sqlite-extras</code>). We wrote a parity port on top (branch <code>r16-sqlite-parity</code>, <code>c088a54</code>) that returns rows in the graph engine's order where the brief depends on it.</p>
+<p>The output matches. Briefs were byte-identical on 5 dev cases × 2 layouts, with each engine reading graphs built by either engine. The SQL parity check reported "same" on 10 graphs, and the engine benchmark checked 5,784 answers with no disagreements. So the quality results above apply equally to a SQLite backend. The performance does not.</p>
+
+<figure>
+  <div class="fig-title">Graph engine vs SQLite on key workloads (log scale)</div>
+  <div class="chart" id="c-engine"></div>
+  <div class="legend"><span style="--c:var(--graph)">Graph engine (cypherlite v0.16.1)</span><span style="--c:var(--cheap)">SQLite</span></div>
+  <figcaption>Milliseconds, log scale, shorter is better. Labels at right give the ratio. Hatched bars are failures: the graph engine trapped out of memory or hit the 180 s timeout. The bottom two rows are the workloads where the graph engine wins. The <code>query brief</code> row is the native SQLite driver through the CLI; the other rows run both engines in WebAssembly.</figcaption>
+</figure>
+
+<h3>Tracetoon's own brief</h3>
+<figure>
+  <div class="fig-title"><code>query brief</code> CLI time per case</div>
+  <div class="chart" id="c-brief"></div>
+  <div class="legend"><span style="--c:var(--cheap)">SQLite (parity port, r16 brief)</span><span style="--c:var(--graph)">cypherlite</span><span style="--c:var(--main)">Relate aa0f79e (r23 brief)</span></div>
+  <figcaption>Median of 3 runs, toon layout. Left: the r16 brief on cypherlite and on the SQLite parity port. Right: the shipping r23 brief on cypherlite and on Relate. The two panels use different brief versions, so compare within a panel.</figcaption>
+</figure>
+
+<div class="tbl"><table>
+  <thead><tr><th>Measure</th><th class="n">Graph engine</th><th class="n">SQLite</th><th class="n">Ratio</th></tr></thead>
+  <tbody id="t-engine"></tbody>
+</table></div>
+<p>The graph engine is faster in one family of queries. A single shortest path from one Prompt to one Commit took 12–52 ms on cypherlite and 190–1,061 ms on SQLite. Single-pair path and BFS queries took 0.2–0.4 ms on cypherlite and 2–36 ms on SQLite, and the SQLite recursive CTE that returns the full path ran out of memory. Everything else, including every query Tracetoon runs to build a brief, was faster on SQLite.</p>
+</section>
+
+<section>
+<h2 id="relate">Relate vs cypherlite: the gap has not closed</h2>
+<p>The engine benchmark above ran on cypherlite v0.16.1, the predecessor of Relate. When we migrated Tracetoon to Relate (<code>bd55f75</code>), we measured Relate <code>aa0f79e</code> against cypherlite on Tracetoon's own brief. <code>query brief</code> was 6–24% slower on Relate. Prepare time and peak memory were about equal. The Relate WASM module is 6.85 MB, against 6.50 MB for cypherlite.</p>
+<div class="tbl"><table>
+  <thead><tr><th>Case</th><th class="n">Brief, cypherlite</th><th class="n">Brief, Relate</th><th class="n">Change</th><th class="n">Prepare, cypherlite</th><th class="n">Prepare, Relate</th><th class="n">Peak RSS, cypherlite / Relate</th></tr></thead>
+  <tbody id="t-relate"></tbody>
+</table></div>
+<p>Milliseconds, median of 3. Prepare ran with graph search off. So the 3× gap to SQLite on the brief is now a bit larger.</p>
+</section>
+
+<section>
+<h2 id="feedback">Feedback for the Relate team</h2>
+<p>In priority order. File pointers are into the Relate repository at <code>aa0f79e</code>. The benchmark failures were measured on cypherlite v0.16.1; we have not rerun the full suite on Relate, and the code paths below are where we expect the cost to be.</p>
+<ol class="fb">
+  <li>
+    <h4>Make bounded var-length distinct, count and exists use the frontier kernel <span class="pri p1">P1</span></h4>
+    <p>The worst failures are variable-length patterns whose answer is a set of distinct endpoint pairs. <code>walk_var_length</code> clones the row, the used-relationship set and the trail on every hop and enumerates every trail, and <code>UsedRels</code> is a <code>Vec</code> with a linear <code>contains</code>. A frontier kernel exists and was already in cypherlite v0.15+, yet these shapes still exploded: k-hop reach k=4 took 3,180 ms and 1,070 MB on 349 nodes and k=5 trapped at 4,072 MB, where SQLite took 72 and 149 ms. Co-change at d=4 took 7,411 ms against 37 ms. Either the gate in <code>frontier_engages</code> does not engage for these shapes or they do not qualify. Widen it to undirected, unlabeled-target and <code>&lt;&gt;</code>-filtered patterns, or add a planner hint.</p>
+    <pre class="cypher">MATCH (p:Prompt)-[*1..k]-(n) WHERE n &lt;&gt; p WITH DISTINCT p, n RETURN count(*)
+MATCH (a:File)-[:TOUCHES*1..2d]-(b:File) WHERE a &lt;&gt; b WITH DISTINCT a, b RETURN count(*)</pre>
+    <p class="where"><code>relate/relate-executor/src/pattern_walk/admit.rs:505</code> (<code>walk_var_length</code>) · <code>relate/relate-executor/src/pattern_walk/mod.rs:332</code> (<code>UsedRels</code>) · <code>relate/relate-executor/src/exec/kernels/frontier_match.rs:745</code> (<code>frontier_engages</code>)</p>
+  </li>
+  <li>
+    <h4>Batch shortestPath per source and recognize all-pairs patterns <span class="pri p1">P1</span></h4>
+    <p>One shortest path per (Prompt, node) pair on 5,258 nodes took 9,129 ms at k=1 and 169,172 ms at k=3, against 7.1 and 1,678 ms on SQLite. <code>shortest_value</code> runs a search per row. When many rows share a source, one BFS from that source answers all of them.</p>
+    <p class="where"><code>relate/relate-executor/src/eval_walk/shortest.rs:25</code> (<code>shortest_value</code>)</p>
+  </li>
+  <li>
+    <h4>A bulk-load API <span class="pri p1">P1</span></h4>
+    <p>Load time grows much faster than SQLite's: 3× at 349 nodes and 16× at 26,726 nodes (23,414 vs 1,474 ms). Tracetoon loads its graph as JSON batches with per-relationship property joins. A columnar or typed-array load path with internal-id relationships would remove most of that.</p>
+  </li>
+  <li>
+    <h4>Cut per-call overhead: compact results, multi-query calls, plan reuse <span class="pri p2">P2</span></h4>
+    <p>Every <code>execute</code> call builds a full JSON wire envelope, and Tracetoon then runs <code>JSON.stringify</code> on parameters and <code>JSON.parse</code> on the result. <code>executeScript</code> runs several statements but still returns one JSON envelope per statement. A compact or streaming row format and a multi-query call with shared parameters would help the brief, which runs dozens of small queries. The plan cache also drops an entry after any commit, so a load-then-query workload replans.</p>
+    <p class="where"><code>surfaces/relate-wasm/src/lib.rs:78</code> (<code>execute</code>), <code>:86</code> (<code>execute_script</code>) · <code>relate/relate/src/plan_cache.rs</code> · tracetoon <code>src/graph/engine.ts:138</code>, <code>:147</code></p>
+  </li>
+  <li>
+    <h4>Startup and memory baseline <span class="pri p2">P2</span></h4>
+    <p><code>initSync</code> compiles the 6.85 MB module in every process, and the graph engine starts at about 18 MB of WASM memory against 8 MB for SQLite. On graphs up to 40 nodes, load took 147 ms vs 47 ms. Offer a cached compiled module, let builds drop optional features, and ship a size-optimized build (<code>wasm-opt -Oz</code>).</p>
+    <p class="where"><code>Makefile:42</code> (<code>build-wasm</code>) · tracetoon <code>src/graph/engine.ts:54</code></p>
+  </li>
+  <li>
+    <h4>A configurable memory ceiling with clean errors <span class="pri p2">P2</span></h4>
+    <p>The failures above ended as WASM traps at 3.5–4.1 GB, which take the process down. A ceiling the host can set, with an ordinary query error when it is hit, would let a tool fall back to a cheaper query.</p>
+  </li>
+  <li>
+    <h4>Full-text analyzers at index time <span class="pri p3">P3</span></h4>
+    <p>Relate's FULLTEXT index is true BM25 (k1 1.2, b 0.75), and the <code>english</code> analyzer Porter-stems the query. The index's <code>fulltext.analyzer</code> config is not applied to stored tokens, so a stemmed query does not meet unstemmed index terms. Tracetoon Porter-stems both the hunk text and the query in TypeScript to work around it. Apply the analyzer at index time. A code-aware tokenizer that splits camelCase, snake_case and paths would also help this workload. Quoted phrases do not yet enforce adjacency.</p>
+    <p class="where"><code>relate/relate-executor/src/exec/fulltext.rs</code> (module doc, lines 20–27) · tracetoon <code>src/graph/porter.ts</code></p>
+  </li>
+  <li>
+    <h4>Publish prebuilt WASM artifacts <span class="pri p3">P3</span></h4>
+    <p>There is no prebuilt <code>relate.wasm</code> in the repository. Building one needs binaryen in addition to the Rust toolchain, which is a hurdle for a tool that only wants to embed it.</p>
+  </li>
+</ol>
+<div class="callout g">
+  <p><b>Keep and advertise the single-pair path advantage.</b> One-to-one shortest path and BFS were 10–100× faster than SQLite and never failed, where SQLite's recursive CTE ran out of memory returning the path. That is a real strength of a graph engine, and it should stay fast as the items above land.</p>
+</div>
+<div class="card s" style="margin-top:20px">
+  <h4>Benchmark to adopt</h4>
+  <p style="margin:6px 0;font-size:15px">Use the queries above as a regression suite, with the target "match or beat SQLite" on every row. The harness is <code>scripts/bench-engines.ts</code> on tracetoon branch <code>feat/evidence-sqlite-extras</code> (<code>d7e7eb9</code>). It runs both engines in WebAssembly on real Tracetoon graphs (7 to 876 nodes) and synthetic graphs (349 to 107,426 nodes), checks that answers agree, and records time and memory.</p>
+  <ul>
+    <li>W1: the full PR workload (brief, derive, every named query).</li>
+    <li>B1: k-hop reach <code>[*1..k]</code> + DISTINCT, k = 1 to 6. B1sp: the same with shortestPath.</li>
+    <li>B2: co-change <code>[:TOUCHES*1..2d]</code>, d = 1 to 4, with and without shortestPath.</li>
+    <li>B3: shortest Prompt→Commit path. B4: provenance chain. B5: cycle closure.</li>
+    <li>Path forms: single-pair path, BFS and length, prompt→hunk, commit→prompt, file→file.</li>
+  </ul>
+</div>
+</section>
+
+<section>
+<h2 id="method">Method and caveats</h2>
+<ul>
+  <li><b>Harness.</b> prbench-score at <code>e7085bd</code> plus the paired-delta script. Dataset real-cases@1.0.0, dev split: 5 real Tracetoon PRs × 5 replicates per arm.</li>
+  <li><b>Judges.</b> Opus and Sonnet for Claude runs, Sol and Terra for Codex runs. A paired outcome counts only when every judgment agrees.</li>
+  <li><b>Δ-of-Δ.</b> (graph − its base) − (relational − its base), with a case bootstrap of 5000 resamples, seed 7.</li>
+  <li><b>Base drafts.</b> Shared between arms, except that Claude r20–r23 used base drafts regenerated after Claude Code updated (CLI pinned at 2.1.319). Δ-of-Δ compares each arm with its own base, which is why the rounds remain comparable.</li>
+  <li><b>Sample size.</b> 25 pairs per provider, 5 cases. The held-out test split has not been run.</li>
+  <li><b>Engine numbers.</b> The SQLite vs graph engine benchmark was measured on cypherlite v0.16.1 by another agent. The Relate vs cypherlite brief timings are from our own run on this machine.</li>
+  <li><b>Branches.</b> The relational and SQLite branches live only on the steveonjava fork of Tracetoon.</li>
+</ul>
+</section>
+</main>
+</div>
+
+<script>
+const D = {
+  final:[
+    ["Composite (0–100)","78.9","73.0","86.6 / 87.5","85.0"],
+    ["Its own base","73.7","75.0","83.2 / 82.3","82.2"],
+    ["Paired outcomes vs base (W/T/L)","18/6/1","6/17/2","12/12/1 / 13/10/2","13/11/1"],
+    ["Claims covered","0.96","0.94","0.95 / 0.95","0.94"],
+    ["Context covered","0.45","0.38","0.44 / 0.47","0.35"],
+    ["Uncertainties respected","0.60","0.52","1.00 / 1.00","1.00"],
+    ["Rubric (mean / 2)","0.88","0.86","0.91 / 0.92","0.91"],
+    ["Factual errors per judgment","0.08","0.14","0.00 / 0.00","0.00"],
+    ["Unsupported claims per judgment","0.03","0.09","0.00 / 0.00","0.00"],
+    ["Traps hit per judgment","0.00","0.10","0.00 / 0.00","0.00"],
+    ["Cost per draft (USD)","0.407","0.412","0.207 / 0.198","0.169"],
+    ["Writer input tokens","482K","465K","2.20M / 2.16M","1.76M"]
+  ],
+  // [graphBetter, relBetter, equal, delta, lo, hi]
+  rounds:[
+    {r:"r15",c:"96686e9",w:"Graph brief before the relational arm existed",claude:[6,1,18,7.4,0.8,15.4],codex:[1,7,17,-0.3,-1.8,1.2]},
+    {r:"r18",c:"b12d2c9",w:"BM25 search links, code lines, limits, entry, economy",claude:[8,2,15,6.5,-0.7,15.4],codex:[1,7,17,0.1,-1.1,1.1]},
+    {r:"r18 +vec",c:"b12d2c9",w:"BM25 plus vector search (Codex only)",claude:null,codex:[3,8,14,-0.8,-3.9,1.7]},
+    {r:"r19",c:"7038fac",w:"Entry row says what each function owns",claude:[8,5,12,3.9,-0.4,10.0],codex:[5,8,12,0.8,-1.6,2.3]},
+    {r:"r20",c:"4dd6e7c",w:"Entry row drops call relations; Claude rerun on regenerated base",claude:[11,3,11,4.6,0.1,9.1],codex:[2,5,18,0.5,-1.2,2.3]},
+    {r:"r21",c:"0101b31",w:"Stale limits retired; misattributed test claims flagged",claude:[8,1,16,3.3,-2.9,9.7],codex:[6,4,15,1.6,0.0,2.8]},
+    {r:"r22",c:"7483847",w:"Owners rows; code cells spell out direction",claude:[12,2,11,4.1,-1.2,10.3],codex:[6,5,14,2.0,0.3,3.4]},
+    {r:"r23",c:"bd55f75",w:"Shipping build on Relate with Relate BM25 search links",claude:[12,1,12,7.3,1.7,13.8],codex:[4,5,16,0.7,-0.4,1.9]},
+    {r:"r23 rerun",c:"bd55f75",w:"Second Codex run of the shipping build",claude:null,codex:[4,5,16,2.4,1.1,4.0]}
+  ],
+  // [label, graph ms or null (failure), sqlite ms, failure text, graphWins]
+  engine:[
+    ["query brief CLI, pr8",417,118,null,false],
+    ["PR workload warm, ≤40 nodes",24,8.6,null,false],
+    ["PR workload warm, >400 nodes",860,322,null,false],
+    ["Load, 26,726 nodes",23414,1474,null,false],
+    ["k-hop k=4, 349 nodes",3180,72,null,false],
+    ["k-hop k=5, 349 nodes",null,149,"trap at 4,072 MB",false],
+    ["k-hop k=3, 876 nodes",1797,134,null,false],
+    ["Co-change d=4, 530 nodes",7411,37,null,false],
+    ["Per-pair shortest k=3, 5,258 nodes",169172,1678,null,false],
+    ["Co-change d=1, 107k nodes",null,71,"180 s timeout",false],
+    ["Shortest Prompt→Commit, 876 nodes",52,1061,null,true],
+    ["Single-pair BFS, 876 nodes",0.31,32.6,null,true]
+  ],
+  engineTable:[
+    ["query brief CLI, toon layout (median per case)","313–417 ms","107–124 ms","~3.2×"],
+    ["query brief CLI, neighborhood layout","354–534 ms","122–145 ms","~3.5×"],
+    ["query brief peak RSS","212–264 MB","125–167 MB",""],
+    ["prepare time / peak RSS","681–903 ms / 263–325 MB","446–556 ms / 170–209 MB",""],
+    ["PR workload in WASM, ≤40 nodes: load / warm","147 / 24 ms","47 / 8.6 ms","3.1× / 2.8×"],
+    ["PR workload, 41–400 nodes: load / warm","220 / 277 ms","62 / 79 ms","3.5×"],
+    ["PR workload, >400 nodes: load / warm","408 / 860 ms","142 / 322 ms","2.7×"],
+    ["WASM memory, small graphs","18 MB","8 MB",""],
+    ["Load, 349 / 876 / 5,258 / 26,726 nodes","328 / 509 / 2,052 / 23,414 ms","110 / 142 / 309 / 1,474 ms","3× to 16×"],
+    ["k-hop reach, 349 nodes, k = 3 / 4 / 5","172 / 3,180 ms (1,070 MB) / trap at 4,072 MB","27 / 72 / 149 ms","6× / 44× / failed"],
+    ["k-hop reach, 876 nodes, k = 3","1,797 ms, 560 MB","134 ms","13×"],
+    ["Co-change, 530 nodes, d = 4","7,411 ms, 1,608 MB","37 ms","202×"],
+    ["Shortest path per (Prompt, node), 5,258 nodes, k = 1 / 3","9,129 / 169,172 ms","7.1 / 1,678 ms","1,286× / 101×"],
+    ["Any query, 107,426 nodes","180 s timeout","43–3,372 ms","failed"],
+    ["Shortest Prompt→Commit path, 349–876 nodes","12–52 ms","190–1,061 ms","0.05×"],
+    ["Single-pair path / BFS, 180–876 nodes","0.2–0.4 ms","2–36 ms (path CTE: out of memory)","0.01–0.1×"]
+  ],
+  // case: [sqlite r16, cypherlite r16, cypherlite r23, relate r23]
+  brief:[["pr5",121,396,452,559],["pr8",118,417,464,502],["pr9",124,396,437,480],["pr11",107,313,359,379],["pr12",115,339,388,443]],
+  relate:[
+    ["pr5",452,559,1024,1039,"294 / 295"],["pr8",464,502,1021,1080,"328 / 334"],["pr9",437,480,1005,1045,"339 / 342"],
+    ["pr11",359,379,874,863,"268 / 275"],["pr12",388,443,895,952,"276 / 278"]
+  ]
+};
+
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e}
+function svg(w,h,label){return el("svg",{viewBox:`0 0 ${w} ${h}`,width:w,role:"img","aria-label":label})}
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmtD=v=>(v>0?"+":v<0?"−":"")+Math.abs(v).toFixed(1);
+
+function outcomes(){
+  const rows=D.rounds,rh=28,top=44,w=880,h=top+rows.length*rh+16,s=svg(w,h,"Paired outcomes per round, graph better versus relational better, for Claude and Codex");
+  rows.forEach((r,i)=>el("text",{x:8,y:top+i*rh+5,"font-size":12.5,class:"mono"},s,r.r));
+  const panels=[["claude","Claude · Sonnet",110],["codex","Codex · Terra",500]];
+  const maxN=13;
+  panels.forEach(([k,title,x])=>{
+    const pw=330,mid=x+pw*0.36,unit=(pw*0.56)/maxN;
+    el("text",{x:x,y:16,"font-size":13,"font-weight":600},s,title);
+    el("text",{x:mid-6,y:32,"font-size":10.5,"text-anchor":"end",class:"muted"},s,"← relational better");
+    el("text",{x:mid+6,y:32,"font-size":10.5,class:"muted"},s,"graph better →");
+    el("line",{x1:mid,x2:mid,y1:top-12,y2:top+rows.length*rh-10,class:"axis","stroke-width":1.5},s);
+    rows.forEach((r,i)=>{const y=top+i*rh;const d=r[k];
+      if(!d){el("text",{x:mid+6,y:y+4,"font-size":11,class:"muted"},s,"not run");return}
+      const [g,b,e]=d;
+      el("rect",{x:mid-b*unit,y:y-9,width:b*unit,height:18,fill:css("--main"),rx:2},s);
+      el("rect",{x:mid,y:y-9,width:g*unit,height:18,fill:css("--graph"),rx:2},s);
+      el("text",{x:mid-b*unit-5,y:y+4,"font-size":11.5,"text-anchor":"end","font-weight":600},s,b);
+      el("text",{x:mid+g*unit+5,y:y+4,"font-size":11.5,"font-weight":600},s,g);
+      el("text",{x:x+pw+4,y:y+4,"font-size":11,"text-anchor":"end",class:"muted mono"},s,"="+e)});
+  });
+  document.getElementById("c-outcomes").appendChild(s);
+}
+
+function delta(){
+  const rows=D.rounds,rh=28,top=44,w=880,h=top+rows.length*rh+30,s=svg(w,h,"Composite delta of deltas per round with 95 percent intervals, for Claude and Codex");
+  rows.forEach((r,i)=>el("text",{x:8,y:top+i*rh+5,"font-size":12.5,class:"mono"},s,r.r));
+  const panels=[["claude","Claude · Sonnet",110,-4,16,[-4,0,4,8,12,16]],["codex","Codex · Terra",500,-4,4,[-4,-2,0,2,4]]];
+  panels.forEach(([k,title,x,min,max,ticks])=>{
+    const pw=320,xOf=v=>x+((v-min)/(max-min))*pw;
+    el("text",{x:x,y:16,"font-size":13,"font-weight":600},s,title);
+    ticks.forEach(t=>{el("line",{x1:xOf(t),x2:xOf(t),y1:top-14,y2:top+rows.length*rh-10,class:"axis","stroke-width":t===0?1.8:1},s);
+      el("text",{x:xOf(t),y:top+rows.length*rh+8,"font-size":11,"text-anchor":"middle",class:"muted mono"},s,(t>0?"+":t<0?"−":"")+Math.abs(t))});
+    rows.forEach((r,i)=>{const y=top+i*rh;const d=r[k];
+      if(!d){el("text",{x:xOf(0)+6,y:y+4,"font-size":11,class:"muted"},s,"not run");return}
+      const [, , ,v,lo,hi]=d;const col=lo>0?css("--graph"):css("--muted");
+      el("line",{x1:xOf(lo),x2:xOf(hi),y1:y,y2:y,stroke:col,"stroke-width":2.5},s);
+      [lo,hi].forEach(t=>el("line",{x1:xOf(t),x2:xOf(t),y1:y-5,y2:y+5,stroke:col,"stroke-width":2},s));
+      el("circle",{cx:xOf(v),cy:y,r:5.5,fill:col},s);
+      el("text",{x:xOf(hi)+7,y:y+4,"font-size":11,class:"mono"},s,fmtD(v))});
+  });
+  document.getElementById("c-delta").appendChild(s);
+}
+
+function engine(){
+  const rows=D.engine,rh=34,top=34,x0=250,pw=520,w=880,h=top+rows.length*rh+28,s=svg(w,h,"Graph engine and SQLite times for key workloads on a log scale");
+  const lmin=-1,lmax=6,xOf=v=>x0+((Math.log10(v)-lmin)/(lmax-lmin))*pw;
+  const ticks=[0.1,1,10,100,1000,10000,100000,1000000],lab=["0.1","1","10","100","1 s","10 s","100 s","1000 s"];
+  const defs=el("defs",{},s);const pat=el("pattern",{id:"hatch",width:6,height:6,patternUnits:"userSpaceOnUse",patternTransform:"rotate(45)"},defs);
+  el("rect",{width:6,height:6,fill:css("--warn-soft")},pat);el("line",{x1:0,y1:0,x2:0,y2:6,stroke:css("--warn"),"stroke-width":2},pat);
+  ticks.forEach((t,i)=>{el("line",{x1:xOf(t),x2:xOf(t),y1:top-10,y2:top+rows.length*rh-6,class:"axis"},s);
+    el("text",{x:xOf(t),y:top+rows.length*rh+10,"font-size":11,"text-anchor":"middle",class:"muted mono"},s,lab[i]+(i<4?" ms":""))});
+  const winY=top+(rows.findIndex(r=>r[4]))*rh-6;
+  el("line",{x1:8,x2:w-8,y1:winY,y2:winY,stroke:css("--fg"),"stroke-dasharray":"3 4","stroke-opacity":0.4},s);
+  rows.forEach(([name,g,q,fail,win],i)=>{const y=top+i*rh;
+    el("text",{x:x0-10,y:y+10,"font-size":12,"text-anchor":"end","font-weight":win?600:400},s,name);
+    if(g==null){el("rect",{x:x0,y:y,width:pw,height:12,fill:"url(#hatch)",rx:2},s);
+      el("text",{x:x0+pw-4,y:y+10,"font-size":10.5,"text-anchor":"end","font-weight":600},s,fail)}
+    else el("rect",{x:x0,y:y,width:Math.max(xOf(g)-x0,2),height:12,fill:css("--graph"),rx:2},s);
+    el("rect",{x:x0,y:y+14,width:Math.max(xOf(q)-x0,2),height:12,fill:css("--cheap"),rx:2},s);
+    const ratio=g==null?"failed":(g/q>=1?(g/q).toFixed(g/q<10?1:0)+"× slower":(q/g).toFixed(0)+"× faster");
+    el("text",{x:x0+pw+10,y:y+17,"font-size":11.5,"font-weight":600,fill:win?css("--graph"):css("--warn")},s,ratio)});
+  document.getElementById("c-engine").appendChild(s);
+}
+
+function brief(){
+  const w=880,h=280,s=svg(w,h,"Query brief time per case for SQLite, cypherlite and Relate");
+  const panels=[["r16 brief: SQLite vs cypherlite",40,[[1,"--cheap"],[2,"--graph"]]],["r23 brief: cypherlite vs Relate",480,[[3,"--graph"],[4,"--main"]]]];
+  const max=600,top=40,ph=190;
+  panels.forEach(([title,x,series])=>{
+    const pw=380,x0=x+36,yOf=v=>top+ph-(v/max)*ph;
+    el("text",{x:x,y:20,"font-size":13,"font-weight":600},s,title);
+    [0,200,400,600].forEach(t=>{el("line",{x1:x0,x2:x0+pw-20,y1:yOf(t),y2:yOf(t),class:"axis"},s);el("text",{x:x0-6,y:yOf(t)+4,"font-size":11,"text-anchor":"end",class:"muted mono"},s,t)});
+    const gw=(pw-20)/D.brief.length;
+    D.brief.forEach((r,i)=>{series.forEach(([idx,col],j)=>{const v=r[idx];const bx=x0+i*gw+gw/2-27+j*28;
+      el("rect",{x:bx,y:yOf(v),width:25,height:yOf(0)-yOf(v),fill:css(col),rx:2},s);
+      el("text",{x:bx+12.5,y:yOf(v)-5,"font-size":10,"text-anchor":"middle"},s,v)});
+      el("text",{x:x0+i*gw+gw/2,y:top+ph+18,"font-size":12,"text-anchor":"middle",class:"muted mono"},s,r[0])});
+  });
+  document.getElementById("c-brief").appendChild(s);
+}
+
+function fill(id,rows,classer){const tb=document.getElementById(id);rows.forEach(r=>{const tr=document.createElement("tr");r.forEach((v,i)=>{const td=document.createElement("td");td.textContent=v;const c=classer?classer(r,i):(i?"n":"");if(c)td.className=c;tr.appendChild(td)});tb.appendChild(tr)})}
+
+function tables(){
+  fill("t-final",D.final);
+  const cell=d=>d?`${d[0]}/${d[1]}/${d[2]}`:"not run";
+  const dl=d=>d?`${fmtD(d[3])} [${fmtD(d[4])}, ${fmtD(d[5])}]`:"";
+  const tone=d=>!d?"n":d[4]>0?"n better":d[1]>d[0]?"n worse":"n";
+  const rows=D.rounds.map(r=>[r.r,r.c,r.w,cell(r.claude),dl(r.claude),cell(r.codex),dl(r.codex)]);
+  fill("t-road",rows,(row,i)=>{const r=D.rounds.find(x=>x.r===row[0]);if(i<3)return i===1?"mono":"";const d=i<5?r.claude:r.codex;return i===3||i===5?(d&&d[1]>d[0]?"n worse":"n"):tone(d)});
+  fill("t-engine",D.engineTable,(r,i)=>i===0?"":"n");
+  fill("t-relate",D.relate.map(([c,a,b,p,q,m])=>[c,a,b,"+"+Math.round((b/a-1)*100)+"%",p,q,m]),(r,i)=>i===0?"":i===3?"n worse":"n");
+}
+
+function drawAll(){["c-outcomes","c-delta","c-engine","c-brief"].forEach(id=>{document.getElementById(id).innerHTML=""});outcomes();delta();engine();brief()}
+drawAll();tables();
+try{window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",drawAll)}catch(e){}
+try{new MutationObserver(drawAll).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]})}catch(e){}
+</script>

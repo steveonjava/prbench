@@ -1,0 +1,19 @@
+Answers checked: 5784; engines disagree: 0; invalid paths: 0
+
+## form: path-bfs
+Q1-prompt-to-hunk: cypherlite faster on 5/5 graphs with 100+ nodes  [180n: 0.27 vs 3.49 ms; 197n: 0.34 vs 4.27 ms; 349n: 0.29 vs 10.28 ms; 530n: 0.29 vs 18.11 ms; 876n: 0.31 vs 32.60 ms]; small graphs (<100 nodes, n=45): cypherlite faster in 7
+Q2-commit-to-prompt: cypherlite faster on 4/4 graphs with 100+ nodes  [197n: 1.57 vs 8.33 ms; 349n: 0.31 vs 10.00 ms; 530n: 0.29 vs 17.26 ms; 876n: 0.34 vs 35.84 ms]; small graphs (<100 nodes, n=45): cypherlite faster in 20
+Q3-file-to-file: cypherlite faster on 5/5 graphs with 100+ nodes  [180n: 0.27 vs 3.15 ms; 197n: 0.35 vs 3.74 ms; 349n: 0.26 vs 10.28 ms; 530n: 0.26 vs 18.85 ms; 876n: 0.28 vs 31.17 ms]; small graphs (<100 nodes, n=19): cypherlite faster in 3
+criterion for path-bfs: HOLDS (3/3 questions)
+
+## form: len
+Q1-prompt-to-hunk: cypherlite faster on 5/5 graphs with 100+ nodes  [180n: 0.23 vs 2.46 ms; 197n: 0.24 vs 3.16 ms; 349n: 0.23 vs 7.61 ms; 530n: 0.31 vs 12.69 ms; 876n: 0.25 vs 25.08 ms]; small graphs (<100 nodes, n=45): cypherlite faster in 2
+Q2-commit-to-prompt: cypherlite faster on 4/4 graphs with 100+ nodes  [197n: 2.01 vs 4.58 ms; 349n: 0.28 vs 7.26 ms; 530n: 0.27 vs 12.44 ms; 876n: 0.28 vs 28.21 ms]; small graphs (<100 nodes, n=45): cypherlite faster in 10
+Q3-file-to-file: cypherlite faster on 5/5 graphs with 100+ nodes  [180n: 0.25 vs 2.04 ms; 197n: 0.21 vs 2.66 ms; 349n: 0.23 vs 7.42 ms; 530n: 0.20 vs 12.69 ms; 876n: 0.21 vs 23.80 ms]; small graphs (<100 nodes, n=19): cypherlite faster in 1
+criterion for len: HOLDS (3/3 questions)
+
+## form: path
+Q1-prompt-to-hunk: cypherlite faster on 5/5 graphs with 100+ nodes  [180n: 0.28 vs OOM ms; 197n: 0.41 vs OOM ms; 349n: 0.36 vs OOM ms; 530n: 0.30 vs OOM ms; 876n: 0.41 vs OOM ms]; small graphs (<100 nodes, n=45): cypherlite faster in 17
+Q2-commit-to-prompt: cypherlite faster on 4/4 graphs with 100+ nodes  [197n: 1.50 vs OOM ms; 349n: 0.31 vs OOM ms; 530n: 0.33 vs OOM ms; 876n: 0.40 vs OOM ms]; small graphs (<100 nodes, n=45): cypherlite faster in 16
+Q3-file-to-file: cypherlite faster on 5/5 graphs with 100+ nodes  [180n: 0.30 vs OOM ms; 197n: 0.32 vs OOM ms; 349n: 0.25 vs OOM ms; 530n: 0.29 vs OOM ms; 876n: 0.29 vs OOM ms]; small graphs (<100 nodes, n=19): cypherlite faster in 18
+criterion for path: HOLDS (3/3 questions)
